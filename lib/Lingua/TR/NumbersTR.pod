@@ -1,0 +1,72 @@
+=head1 AD
+
+Lingua::TR::Numbers - sayıları türkçe okunuşlarına çevirir.
+
+=head1 ÖZET
+
+   use Lingua::TR::Numbers qw(num2tr num2tr_ordinal);
+   
+   my $x = 234;
+   my $y = 54;
+   print "Bugün yapman gereken ", num2tr($x), " tane işin var!\n";
+   print ucfirst(num2tr_ordinal($y)), " den sonra endişelenmeyi bırakırsın.\n";
+
+çıktısı:
+
+   Bugün yapman gereken iki yüz otuz dört tane işin var!
+   Elli dördüncü den sonra endişelenmeyi bırakırsın.
+
+=head1 TANIM
+
+Lingua::TR::Numbers, sayıları türkçe okunuşlarına çevirir. (İstenmesi halinde)
+adboşluğunuza iki adet fonksiyon ihraceder:  C<num2tr> ve C<num2tr_ordinal>.
+Bu fonksiyonlardan dönen değer; belirtilen sayının türkçe okunuşu
+veya belirtilen değerin sayı olmaması durumunda C<undef> tir.
+
+Modül, "12" veya "-3" gibi tam sayılar ile "53.19" gibi gerçel sayılar
+üzerinde çalışabilir.
+
+Modülü, üstel gösterimi de anlayabilir. "4E9" değeri, "dört çarpı 10 üzeri dokuz"
+değerine dönüştürülecektir. Ayrıca, "INF", "-INF", "NaN" değerleride sırasıyla:
+"sonsuz", "negatif sonsuz" and "sayı-değil" değerlerine dönüştürülür.
+
+Girilen verideki herhangi bir virgül işareti yok sayılacaktır.
+
+=head1 SINIRLAMA
+
+Modülü desteklediği en yüksek sayı değeri 999 desilyondur (999*10**33).
+Bundan daha yüksek haneler, sık kullanılmadığı için, modüle dahil edilmemiştir.
+
+=head1 DİĞER BELGELER
+
+L<Lingua::EN::Numbers>. L<http://www.radikal.com.tr/haber.php?haberno=66427>
+L<http://en.wikipedia.org/wiki/Names_of_large_numbers>
+
+=head1 UYARI
+
+Bu modülün kaynak dosyası UTF-8 olarak kodlanmıştır (BOM olmadan) ve mümkün 
+olduğu taktirde, dönen değerler UTF-8 kodludur. 
+
+Şu an için modül, 5.6 sürümünden daha yaşlı Perl sürümleriyle çalışmamaktadır.
+
+=head1 YAZAR
+
+Burak Gürsoy, E<lt>burakE<64>cpan.orgE<gt>
+
+=head1 TELİF
+
+Telif hakkı: (c) 2006 Burak Gürsoy. Tüm hakları saklıdır.
+
+Bu modül, Sean M. Burke' ün Lingua::EN::Numbers
+modülü üzerine inşa edilmiştir, ve ilgili modülün
+değiştirilmiş kod parçacıklarını içermektedir.
+
+Lingua::EN::Numbers telif hakkı: (c) 2005, Sean M. Burke.
+
+=head1 LİSANS
+
+Bu kütüphane ücretsiz bir yazılımdır; Perl sürüm 5.8.8 veya istediğiniz
+taktirde, daha yüksek bir Perl 5 sürümünün lisansına bağlı olarak; Perl ile
+aynı lisans altında tekrar dağıtabilir ve/veya değiştirebilirsiniz.
+
+=cut
