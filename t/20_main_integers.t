@@ -12,7 +12,7 @@ print "# Using Lingua::TR::Numbers v$Lingua::TR::Numbers::VERSION\n";
 
 ok num2tr(  0    ), "sıfır";
 ok num2tr( '0'   ), "sıfır";
-ok num2tr('-0'   ), "negatif sıfır";
+ok num2tr('-0'   ), "eksi sıfır";
 ok num2tr( '0.0' ), "sıfır nokta sıfır";
 ok num2tr(  '.0' ), "nokta sıfır";
 ok num2tr(  1    ), "bir";

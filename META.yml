@@ -1,6 +1,6 @@
 ---
 name: Lingua-TR-Numbers
-version: 0.1
+version: 0.2
 author:
   - 'Burak Gursoy <burak@cpan.org>'
 abstract: Converts numbers into Turkish text.
@@ -10,7 +10,7 @@ resources:
 provides:
   Lingua::TR::Numbers:
     file: lib/Lingua/TR/Numbers.pm
-    version: 0.1
+    version: 0.2
 generated_by: Module::Build version 0.2805
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html

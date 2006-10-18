@@ -1,48 +1,40 @@
-package Lingua::TR::Numbers;
-require 5.006;
 #BEGIN { if($] < 5.006) { package utf8; $INC{'utf8.pm'} = 1; } }
+package Lingua::TR::Numbers;
+use 5.006;
 use utf8;
 use strict;
-use vars qw(@ISA $VERSION @EXPORT @EXPORT_OK %D %Mult %Card2ord %Card2ordTR);
-use constant RE_UNLU => qr{([aeıiuüoö])}o; # must be defined after use utf8;
-use constant IS_LEGACY => $] < 5.006;
-
-require Exporter;
+use vars qw(@ISA $VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS);
+#use constant IS_LEGACY => $] < 5.006;
+use Exporter ();
 
 BEGIN { *DEBUG = sub () {0} unless defined &DEBUG } # setup a DEBUG constant
 
-@ISA       = qw(Exporter);
-$VERSION   = '0.1';
-@EXPORT_OK = qw( num2tr num2tr_ordinal );
+$VERSION     = '0.2';
 
-@D{0 .. 10, 20, 30,40,50,60,70,80,90} = qw|
- sıfır
- bir   iki   üç   dört beş  altı   yedi   sekiz  dokuz  on
-       yirmi otuz kırk elli altmış yetmiş seksen doksan 
-|;
+@ISA         = qw( Exporter              );
+@EXPORT_OK   = qw( num2tr num2tr_ordinal );
+%EXPORT_TAGS =   ( all => \@EXPORT_OK    );
 
-@Card2ord{  qw| bir     iki    üç     dört     beş     altı    yedi    sekiz     dokuz     |}
- =          qw| birinci ikinci üçüncü dördüncü beşinci altıncı yedinci sekizinci dokuzuncu |;
-
-
-%Card2ordTR = qw(
-                   a   ncı
-                   e   nci
-                   ı   ncı
-                   i   nci
-                   u   ncu
-                   ü   ncü
-                   o   ncu
-                   ö   ncü
-);
+my($RE_VOWEL, %D, %Mult, %Card2ord, %Card2ordTR);
 
 POPULATE: {
-  my @large = qw<
-                   bin       milyon    milyar 
-                   trilyon   katrilyon kentilyon
-                   seksilyon septilyon oktilyon
-                   nobilyon  desilyon
-              >;
+  @D{ 0,1 ,2 ,3 ,4 ,5 ,6 ,7 ,8 ,9  } = qw| sıfır bir iki   üç   dört beş  altı   yedi   sekiz  dokuz  |;
+  @D{   10,20,30,40,50,60,70,80,90 } = qw|       on  yirmi otuz kırk elli altmış yetmiş seksen doksan |;
+
+  @Card2ord{  qw| bir     iki    üç     dört     beş     altı    yedi    sekiz     dokuz     |}
+            = qw| birinci ikinci üçüncü dördüncü beşinci altıncı yedinci sekizinci dokuzuncu |;
+
+  @Card2ordTR{ qw|a   e   ı   i   u   ü   o   ö   |}
+            =  qw|ncı nci ncı nci ncu ncü ncu ncü |;
+
+  $RE_VOWEL = join '', keys %Card2ordTR;
+  $RE_VOWEL = qr{([$RE_VOWEL])}o;
+
+  my @large = qw|
+                   bin       milyon    milyar    trilyon  katrilyon
+                   kentilyon seksilyon septilyon oktilyon nobilyon
+                   desilyon
+                |;
   my $c = 0;
   $Mult{$c++} = $_ for '', @large;
 }
@@ -50,8 +42,8 @@ POPULATE: {
 #==========================================================================
 
 sub num2tr_ordinal {
-   #  Cardinals are [bir iki üç...]
-   #  Ordinals  are [birinci ikinci üçüncü...]
+   #  Cardinals are [bir     iki    üç     ...]
+   #  Ordinals  are [birinci ikinci üçüncü ...]
   
   return undef unless defined $_[0] and length $_[0];
   my($x) = $_[0];
@@ -65,7 +57,7 @@ sub num2tr_ordinal {
   my $step = 1;;
   for my $l (reverse @l) {
      next if not $l;
-     if($l =~ RE_UNLU) {
+     if($l =~ $RE_VOWEL) {
         $ok = $1;
         last;
      }
@@ -94,9 +86,9 @@ sub num2tr {
   return undef unless defined $x and length $x;
 
   return 'sayı-değil'     if $x eq 'NaN';
-  return 'pozitif sonsuz' if $x =~ m/^\+inf(?:inity)?$/si;
-  return 'negatif sonsuz' if $x =~ m/^\-inf(?:inity)?$/si;
-  return         'sonsuz' if $x =~  m/^inf(?:inity)?$/si;
+  return 'eksi sonsuz' if $x =~ m/^\+inf(?:inity)?$/si;
+  return 'artı sonsuz' if $x =~ m/^\-inf(?:inity)?$/si;
+  return      'sonsuz' if $x =~  m/^inf(?:inity)?$/si;
 
   return $D{$x} if exists $D{$x};  # the most common cases
 
@@ -133,8 +125,8 @@ sub num2tr {
 
 sub _sign2tr {
   return undef unless defined $_[0] and length $_[0];  
-  return 'negatif' if $_[0] eq '-';
-  return 'pozitif' if $_[0] eq '+';
+  return 'eksi' if $_[0] eq '-';
+  return 'artı' if $_[0] eq '+';
   return "WHAT_IS_$_[0]";
 }
 
@@ -265,6 +257,7 @@ sub _e2tr {
 }
 
 #==========================================================================
+
 1;
 
 __END__
@@ -280,6 +273,10 @@ __END__
 #1 nobilyon  1.000.000.000.000.000.000.000.000.000.000
 #1 desilyon  1.000.000.000.000.000.000.000.000.000.000.000
 
+=pod
+
+=encoding utf8
+
 =head1 NAME
 
 Lingua::TR::Numbers - Converts numbers into Turkish text.
@@ -291,12 +288,12 @@ Lingua::TR::Numbers - Converts numbers into Turkish text.
    my $x = 234;
    my $y = 54;
    print "Bugün yapman gereken ", num2tr($x), " tane işin var!\n";
-   print ucfirst(num2tr_ordinal($y)), " den sonra endişelenmeyi bırakırsın.\n";
+   print "Yarın annemin ", num2tr_ordinal($y), " yaşgününü kutlayacağız.\n";
 
 prints:
 
    Bugün yapman gereken iki yüz otuz dört tane işin var!
-   Elli dördüncü den sonra endişelenmeyi bırakırsın.
+   Yarın annemin elli dördüncü yaşgününü kutlayacağız.
 
 =head1 DESCRIPTION
 
@@ -310,11 +307,19 @@ This module can handle integers like "12" or "-3" and real numbers like "53.19".
 
 This module also understands exponential notation -- it turns "4E9" into
 "dört çarpı 10 üzeri dokuz"). And it even turns "INF", "-INF", "NaN"
-into "sonsuz", "negatif sonsuz" and "sayı-değil" respectively.
+into "sonsuz", "eksi sonsuz" and "sayı-değil" respectively.
 
 Any commas in the input numbers are ignored.
 
 =head1 FUNCTIONS
+
+You can import these one by one or use the special C<:all> tag:
+
+   use Lingua::TR::Numbers qw(num2tr num2tr_ordinal);
+
+or
+
+   use Lingua::TR::Numbers qw(:all);
 
 =head2 num2tr
 

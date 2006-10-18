@@ -50,23 +50,23 @@ ok N  139, 'yüz otuz dokuz';
 ok num2tr_ordinal(133), 'yüz otuz üçüncü';
 
 ok N '3.14159'  , 'üç nokta bir dört bir beş dokuz';
-ok N '-123'     , 'negatif yüz yirmi üç';
-ok N '+123'     , 'pozitif yüz yirmi üç';
-ok N '+123'     , 'pozitif yüz yirmi üç';
+ok N '-123'     , 'eksi yüz yirmi üç';
+ok N '+123'     , 'artı yüz yirmi üç';
+ok N '+123'     , 'artı yüz yirmi üç';
 
 ok N '0.0001'   , 'sıfır nokta sıfır sıfır sıfır bir';
-ok N '-14.000'  , 'negatif on dört nokta sıfır sıfır sıfır';
+ok N '-14.000'  , 'eksi on dört nokta sıfır sıfır sıfır';
 
 # and maybe even:
-ok N '-1.53e34' , 'negatif bir nokta beş üç çarpı on üzeri otuz dört';
-ok N '-1.53e-34', 'negatif bir nokta beş üç çarpı on üzeri negatif otuz dört';
-ok N '+19e009'  , 'pozitif on dokuz çarpı on üzeri dokuz';
+ok N '-1.53e34' , 'eksi bir nokta beş üç çarpı on üzeri otuz dört';
+ok N '-1.53e-34', 'eksi bir nokta beş üç çarpı on üzeri eksi otuz dört';
+ok N '+19e009'  , 'artı on dokuz çarpı on üzeri dokuz';
 
 ok N "263415"   , "iki yüz altmış üç bin dört yüz on beş";
 
 ok N  "5001"    , "beş bin bir";
-ok N "-5001"    , "negatif beş bin bir";
-ok N "+5001"    , "pozitif beş bin bir";
+ok N "-5001"    , "eksi beş bin bir";
+ok N "+5001"    , "artı beş bin bir";
 
 ok !defined N "abc";
 ok !defined N "00.0.00.00.0.00.0.0";

@@ -1,3 +1,7 @@
+=pod
+
+=encoding utf8
+
 =head1 AD
 
 Lingua::TR::Numbers - sayıları türkçe okunuşlarına çevirir.
@@ -9,12 +13,12 @@ Lingua::TR::Numbers - sayıları türkçe okunuşlarına çevirir.
    my $x = 234;
    my $y = 54;
    print "Bugün yapman gereken ", num2tr($x), " tane işin var!\n";
-   print ucfirst(num2tr_ordinal($y)), " den sonra endişelenmeyi bırakırsın.\n";
+   print "Yarın annemin ", num2tr_ordinal($y), " yaşgününü kutlayacağız.\n";
 
 çıktısı:
 
    Bugün yapman gereken iki yüz otuz dört tane işin var!
-   Elli dördüncü den sonra endişelenmeyi bırakırsın.
+   Yarın annemin elli dördüncü yaşgününü kutlayacağız.
 
 =head1 TANIM
 
@@ -31,6 +35,25 @@ değerine dönüştürülecektir. Ayrıca, "INF", "-INF", "NaN" değerleride sı
 "sonsuz", "negatif sonsuz" and "sayı-değil" değerlerine dönüştürülür.
 
 Girilen verideki herhangi bir virgül işareti yok sayılacaktır.
+
+=head1 FONKSİYONLAR
+
+Modülün fonksiyonlarını teker teker veya özel C<:all> etiketi ile,
+ithal edebilirsiniz:
+
+   use Lingua::TR::Numbers qw(num2tr num2tr_ordinal);
+
+veya
+
+   use Lingua::TR::Numbers qw(:all);
+
+=head2 num2tr
+
+Verilen sayıyı Türkçe yazıya dönüştürür.
+
+=head2 num2tr_ordinal
+
+C<num2tr> ile benzerdir, ancak sayıyı sıralı olarak dönüştürür.
 
 =head1 SINIRLAMA
 
