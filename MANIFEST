@@ -4,7 +4,6 @@ t/01-pod.t
 t/02-pod-coverage.t
 t/20_main_integers.t
 t/30_v1_tests.t
-t/skip.test
 Makefile.PL
 Build.PL
 Changes

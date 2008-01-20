@@ -9,7 +9,7 @@ use Exporter ();
 
 BEGIN { *DEBUG = sub () {0} unless defined &DEBUG } # setup a DEBUG constant
 
-$VERSION     = '0.2';
+$VERSION     = '0.21';
 
 @ISA         = qw( Exporter              );
 @EXPORT_OK   = qw( num2tr num2tr_ordinal );
@@ -355,7 +355,7 @@ Burak Gürsoy, E<lt>burakE<64>cpan.orgE<gt>
 
 =head1 COPYRIGHT
 
-Copyright 2006 Burak Gürsoy. All rights reserved.
+Copyright 2006-2008 Burak Gürsoy. All rights reserved.
 
 This module is based on and includes modified code 
 portions of Sean M. Burke's Lingua::EN::Numbers.

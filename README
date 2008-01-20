@@ -23,11 +23,11 @@ or under Windows:
 
 DEPENDENCIES
 
-None.
+Test::More is needed for running distro tests.
 
 COPYRIGHT
 
-Copyright (c) 2006 Burak Gürsoy. All rights reserved.
+Copyright (c) 2006-2008 Burak Gürsoy. All rights reserved.
 
 This module is based on and includes modified code 
 portions of Sean M. Burke's Lingua::EN::Numbers.

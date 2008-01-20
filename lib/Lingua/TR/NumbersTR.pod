@@ -4,7 +4,7 @@
 
 =head1 AD
 
-Lingua::TR::Numbers - sayıları türkçe okunuşlarına çevirir.
+Lingua::TR::Numbers - Sayıları Türkçe okunuşlarına çevirir.
 
 =head1 ÖZET
 
@@ -78,7 +78,7 @@ Burak Gürsoy, E<lt>burakE<64>cpan.orgE<gt>
 
 =head1 TELİF
 
-Telif hakkı: (c) 2006 Burak Gürsoy. Tüm hakları saklıdır.
+Telif hakkı: (c) 2006-2008 Burak Gürsoy. Tüm hakları saklıdır.
 
 Bu modül, Sean M. Burke' ün Lingua::EN::Numbers
 modülü üzerine inşa edilmiştir, ve ilgili modülün
