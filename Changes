@@ -2,6 +2,9 @@ Revision history for Perl extension Lingua::TR::Numbers.
 
 Time zone is GMT+2.
 
+0.22 Sat Apr 18 06:27:56 2009
+    => Update distro tools.
+
 0.21 Sun Jan 20 19:42:27 2008
     => Test::More is now a prereq.
     => Removed skip.test & fixed 01-pod.t for legacy perls.
