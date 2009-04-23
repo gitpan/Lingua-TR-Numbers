@@ -7,9 +7,9 @@ use vars qw(@ISA $VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS);
 #use constant IS_LEGACY => $] < 5.006;
 use Exporter ();
 
-BEGIN { *DEBUG = sub () {0} unless defined &DEBUG } # setup a DEBUG constant
+BEGIN { *DEBUG = sub () {0} if ! defined &DEBUG } # setup a DEBUG constant
 
-$VERSION = '0.22';
+$VERSION = '0.23';
 
 @ISA         = qw( Exporter              );
 @EXPORT_OK   = qw( num2tr num2tr_ordinal );
@@ -297,8 +297,8 @@ prints:
 
 =head1 DESCRIPTION
 
-This document describes version C<0.22> of C<Lingua::TR::Numbers>
-released on C<18 April 2009>.
+This document describes version C<0.23> of C<Lingua::TR::Numbers>
+released on C<23 April 2009>.
 
 Lingua::TR::Numbers turns numbers into Turkish text. It exports
 (upon request) two functions, C<num2tr> and C<num2tr_ordinal>. 
@@ -331,6 +331,10 @@ Converts the supplied number into Turkish text.
 =head2 num2tr_ordinal
 
 Similar to C<num2tr>, but returns ordinal versions .
+
+=head2 DEBUG
+
+Define C<Lingua::TR::Numbers::DEBUG> to enable debugging.
 
 =head1 LIMIT
 

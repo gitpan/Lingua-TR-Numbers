@@ -1,12 +1,11 @@
 use 5.006;
 use strict;
 use utf8;
-use Test;
+use Test::More qw( no_plan );
 
-BEGIN { plan tests => 18 }
-
-use Lingua::TR::Numbers qw(num2tr);
-ok 1;
+BEGIN {
+   use_ok('Lingua::TR::Numbers', qw(num2tr));
+}
 
 print "# Using Lingua::TR::Numbers v$Lingua::TR::Numbers::VERSION\n";
 

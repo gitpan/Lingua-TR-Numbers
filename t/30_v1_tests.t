@@ -1,10 +1,10 @@
 use 5.006;
 use strict;
 use utf8;
-use Test;
-BEGIN { plan tests => 58 }
+use Test::More qw( no_plan );
 
 use Lingua::TR::Numbers qw(num2tr num2tr_ordinal);
+
 print "# Using Lingua::TR::Numbers v$Lingua::TR::Numbers::VERSION\n";
 ok 1;
 
