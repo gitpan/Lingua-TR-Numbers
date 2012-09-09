@@ -7,35 +7,23 @@ Read the module's POD for documentation and examples.
 
 INSTALLATION
 
-To install this module type the following:
+Just use the cpan shell to install this module. From a command prompt, type:
 
-   perl Makefile.PL
-   make
-   make test
-   make install
+    cpan
 
-or under Windows:
+or
 
-   perl Makefile.PL
-   nmake
-   nmake test
-   nmake install
+    perl -MCPAN -e shell
 
-DEPENDENCIES
+to enter the cpan shell. And then enter:
 
-Test::More is needed for running distro tests.
+   install Lingua::TR::Numbers
 
 COPYRIGHT
-
-Copyright (c) 2006-2008 Burak Gürsoy. All rights reserved.
 
 This module is based on and includes modified code 
 portions of Sean M. Burke's Lingua::EN::Numbers.
 
 Lingua::EN::Numbers is Copyright (c) 2005, Sean M. Burke.
 
-LICENSE
-
-This library is free software; you can redistribute it and/or modify 
-it under the same terms as Perl itself, either Perl version 5.8.8 or, 
-at your option, any later version of Perl 5 you may have available.
+See the LICENSE file bundled with this distribution.

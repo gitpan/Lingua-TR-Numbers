@@ -1,25 +1,29 @@
 ---
-name: Lingua-TR-Numbers
-version: 0.23
+abstract: 'Converts numbers into Turkish text.'
 author:
   - 'Burak Gursoy <burak@cpan.org>'
-abstract: Converts numbers into Turkish text.
-license: perl
-resources:
-  license: http://dev.perl.org/licenses/
-  repository: http://bitbucket.org/burak/cpan-lingua-tr-numbers/
 build_requires:
   Test::More: 0.40
-provides:
-  Lingua::TR::Numbers:
-    file: lib/Lingua/TR/Numbers.pm
-    version: 0.23
+configure_requires:
+  Module::Build: 0.40
+dynamic_config: 1
+generated_by: 'Module::Build version 0.4001, CPAN::Meta::Converter version 2.120921'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Lingua-TR-Numbers
 no_index:
   directory:
     - monolithic_version
     - builder
     - t
-generated_by: Module::Build version 0.32
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.2.html
-  version: 1.2
+    - xt
+provides:
+  Lingua::TR::Numbers:
+    file: lib/Lingua/TR/Numbers.pm
+    version: 0.31
+resources:
+  license: http://dev.perl.org/licenses/
+  repository: http://bitbucket.org/burak/cpan-lingua-tr-numbers/
+version: 0.31

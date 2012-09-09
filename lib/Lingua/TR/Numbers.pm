@@ -1,227 +1,242 @@
-#BEGIN { if($] < 5.006) { package utf8; $INC{'utf8.pm'} = 1; } }
 package Lingua::TR::Numbers;
 use 5.006;
 use utf8;
 use strict;
-use vars qw(@ISA $VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS);
-#use constant IS_LEGACY => $] < 5.006;
-use Exporter ();
+use warnings;
+use subs qw( _log );
+
+our $VERSION = '0.31';
+
+use constant RE_E2TR => qr{
+    \A
+    (
+        [-+]?  # leading sign
+        (?:
+        [\d,]+  |  [\d,]*\.\d+  # number
+        )
+    )
+    [eE]
+    (-?\d+)   # mantissa, has to be an integer
+    \z
+}xms;
+use constant RE_EMPTY     => qr//xms;
+use constant EMPTY_STRING => q{};
+use constant SPACE        => q{ };
+use constant DIGITS       => 0..9;
+use constant TENS         => map { 10 * $_ } 1..9;
+use constant LAST_ELEMENT => -1;
+use constant PREV_ELEMENT => -2;
+use constant CHUNK_MAX    => 100;
+use base qw( Exporter );
+use Carp qw( croak );
 
 BEGIN { *DEBUG = sub () {0} if ! defined &DEBUG } # setup a DEBUG constant
 
-$VERSION = '0.23';
+our @EXPORT_OK   = qw( num2tr num2tr_ordinal );
+our %EXPORT_TAGS =   ( all => \@EXPORT_OK    );
 
-@ISA         = qw( Exporter              );
-@EXPORT_OK   = qw( num2tr num2tr_ordinal );
-%EXPORT_TAGS =   ( all => \@EXPORT_OK    );
-
-my($RE_VOWEL, %D, %Mult, %Card2ord, %Card2ordTR);
+my($RE_VOWEL, %D, %MULT, %CARD2ORD, %CARD2ORDTR);
 
 POPULATE: {
-  @D{ 0,1 ,2 ,3 ,4 ,5 ,6 ,7 ,8 ,9  } = qw| sıfır bir iki   üç   dört beş  altı   yedi   sekiz  dokuz  |;
-  @D{   10,20,30,40,50,60,70,80,90 } = qw|       on  yirmi otuz kırk elli altmış yetmiş seksen doksan |;
+    @D{ DIGITS() } = qw| sıfır bir     iki    üç     dört     beş     altı    yedi    sekiz     dokuz     |;
+    @D{ TENS()   } = qw|       on      yirmi  otuz   kırk     elli    altmış  yetmiş  seksen    doksan    |;
 
-  @Card2ord{  qw| bir     iki    üç     dört     beş     altı    yedi    sekiz     dokuz     |}
-            = qw| birinci ikinci üçüncü dördüncü beşinci altıncı yedinci sekizinci dokuzuncu |;
+    @CARD2ORD{       qw|       bir     iki    üç     dört     beş     altı    yedi    sekiz     dokuz     |}
+                   = qw|       birinci ikinci üçüncü dördüncü beşinci altıncı yedinci sekizinci dokuzuncu |;
 
-  @Card2ordTR{ qw|a   e   ı   i   u   ü   o   ö   |}
-            =  qw|ncı nci ncı nci ncu ncü ncu ncü |;
+    @CARD2ORDTR{     qw| a   e   ı   i   u   ü   o   ö   |}
+                   = qw| ncı nci ncı nci ncu ncü ncu ncü |;
 
-  $RE_VOWEL = join '', keys %Card2ordTR;
-  $RE_VOWEL = qr{([$RE_VOWEL])}o;
+    $RE_VOWEL = join EMPTY_STRING, keys %CARD2ORDTR;
+    $RE_VOWEL = qr{([$RE_VOWEL])}xms;
 
-  my @large = qw|
+    my @large = qw|
                    bin       milyon    milyar    trilyon  katrilyon
                    kentilyon seksilyon septilyon oktilyon nobilyon
                    desilyon
                 |;
-  my $c = 0;
-  $Mult{$c++} = $_ for '', @large;
+    my $c = 0;
+    $MULT{ $c++ } = $_ for EMPTY_STRING, @large;
 }
-
-#==========================================================================
 
 sub num2tr_ordinal {
-   #  Cardinals are [bir     iki    üç     ...]
-   #  Ordinals  are [birinci ikinci üçüncü ...]
-  
-  return undef unless defined $_[0] and length $_[0];
-  my($x) = $_[0];
-  
-  $x = num2tr($x);
-  return $x unless $x;
-  $x =~ s/(\w+)$//s   or return $x . ".";
-  my $last = $1;
-  my @l = split //, $last;
-  my $ok;
-  my $step = 1;;
-  for my $l (reverse @l) {
-     next if not $l;
-     if($l =~ $RE_VOWEL) {
-        $ok = $1;
-        last;
-     }
-     $step++;
-  }
-  if(!$ok) {
-     #return $last if IS_LEGACY;
-     #die "Can not happen: '$last'";
-     return undef;
-  }
+    #  Cardinals are [bir     iki    üç     ...]
+    #  Ordinals  are [birinci ikinci üçüncü ...]
+    my $x = shift;
 
-  $last = $Card2ord{$last} || sub {
-     my $val = $Card2ordTR{$ok};
-     return $last . $val if $step == 1;
-     my $letter = (split //, $val)[-1];
-     return $last.$letter.$val;
-  }->();
+    return unless defined $x and length $x;
 
-  return "$x$last";
+    $x = num2tr( $x );
+    return $x if ! $x;
+
+    my($ok, $end, $step);
+    if ( $x =~ s/(\w+)\z//xms ) {
+        $end  = $1;
+        my @l = split RE_EMPTY, $end;
+        $step = 1;
+
+        foreach my $l ( reverse @l ) {
+            next if not $l;
+            if ( $l =~ $RE_VOWEL ) {
+                $ok = $1;
+                last;
+            }
+            $step++;
+        }
+    }
+    else {
+        return $x . q{.};
+    }
+
+    if ( ! $ok ) {
+        #die "Can not happen: '$end'";
+        return;
+    }
+
+    $end = $CARD2ORD{$end} || sub {
+                                my $val = $CARD2ORDTR{$ok};
+                                return $end . $val if $step == 1;
+                                my $letter = (split RE_EMPTY, $val)[LAST_ELEMENT];
+                                return $end.$letter.$val;
+                            }->();
+
+    return "$x$end";
 }
-
-#==========================================================================
 
 sub num2tr {
-  my $x = $_[0];
-  return undef unless defined $x and length $x;
+    my $x = shift;
+    return unless defined $x and length $x;
 
-  return 'sayı-değil'     if $x eq 'NaN';
-  return 'eksi sonsuz' if $x =~ m/^\+inf(?:inity)?$/si;
-  return 'artı sonsuz' if $x =~ m/^\-inf(?:inity)?$/si;
-  return      'sonsuz' if $x =~  m/^inf(?:inity)?$/si;
+    return 'sayı-değil'  if $x eq 'NaN';
+    return 'eksi sonsuz' if $x =~ m/ \A \+ inf(?:inity)? \z /xmsi;
+    return 'artı sonsuz' if $x =~ m/ \A \- inf(?:inity)? \z /xmsi;
+    return      'sonsuz' if $x =~ m/ \A    inf(?:inity)? \z /xmsi;
+    return $D{$x}        if exists $D{$x};  # the most common cases
 
-  return $D{$x} if exists $D{$x};  # the most common cases
+    # Make sure it's not in scientific notation:
+    { my $e = _e2tr($x); return $e if defined $e; }
 
-  # Make sure it's not in scientific notation:
-  {  my $e = _e2tr($x);  return $e if defined $e; }
-  
-  my $orig = $x;
+    my $orig = $x;
 
-  $x =~ s/,//g; # nix any commas
+    $x =~ s/,//xmsg; # nix any commas
 
-  my $sign;
-  $sign = $1 if $x =~ s/^([-+])//s;
-  
-  my($int, $fract);
-  if(    $x =~ m<^\d+$>          ) { $int = $x }
-  elsif( $x =~ m<^(\d+)\.(\d+)$> ) { $int = $1; $fract = $2 }
-  elsif( $x =~ m<^\.(\d+)$>      ) { $fract = $1 }
-  else {
-    DEBUG and print "Not a number: \"orig\"\n";
-    return undef;
-  }
-  
-  DEBUG and printf " Working on Sign[%s]  Int2tr[%s]  Fract[%s]  < \"%s\"\n",
-   map defined($_) ? $_ : "nil", $sign, $int, $fract, $orig;
-  
-  return join ' ', grep defined($_) && length($_),
-    _sign2tr($sign),
-    _int2tr($int),
-    _fract2tr($fract),
-  ;
+    my $sign;
+    if ( $x =~ s/\A([-+])//xms ) {
+        $sign = $1;
+    }
+
+    my($int, $fract);
+       if( $x =~ m/ \A          \d+  \z/xms ) { $int = $x }
+    elsif( $x =~ m/ \A (\d+)[.](\d+) \z/xms ) { $int = $1; $fract = $2 }
+    elsif( $x =~ m/ \A      [.](\d+) \z/xms ) { $fract = $1 }
+    else {
+        _log "Not a number: '$orig'\n" if DEBUG;
+        return;
+    }
+
+    _log(
+        sprintf " Working on Sign[%s]  Int2tr[%s]  Fract[%s]  < '%s'\n",
+                map { defined($_) ? $_ : 'nil' } $sign, $int, $fract, $orig
+    ) if DEBUG;
+
+    return join SPACE, grep { defined $_ && length $_ }
+                            _sign2tr(  $sign  ),
+                            _int2tr(   $int   ),
+                            _fract2tr( $fract ),
+    ;
 }
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 sub _sign2tr {
-  return undef unless defined $_[0] and length $_[0];  
-  return 'eksi' if $_[0] eq '-';
-  return 'artı' if $_[0] eq '+';
-  return "WHAT_IS_$_[0]";
+    my $x = shift;
+    return ! defined $x || ! length $x ? undef
+         : $x eq q{-}                  ? 'eksi'
+         : $x eq q{+}                  ? 'artı'
+         :                               "WHAT_IS_$x"
+         ;
 }
 
-sub _fract2tr {    # "1234" => "point one two three four"
-  return undef unless defined $_[0] and length $_[0];  
-  my $x = $_[0];
-  return join ' ', 'nokta', map $D{$_}, split '', $x;
+sub _fract2tr { # "1234" => "point one two three four"
+    my $x = shift;
+    return unless defined $x and length $x;
+    return join SPACE, 'nokta',
+                        map { $D{$_} }
+                            split RE_EMPTY, $x;
 }
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # The real work:
 
 sub _int2tr {
-  return undef unless defined $_[0] and length $_[0]
-   and $_[0] =~ m/^\d+$/s;
+    my $x = shift;
+    return unless defined $x and length $x and $x =~ m/\A\d+\z/xms;
+    return $D{$x} if defined $D{$x}; # most common/irreg cases
 
-  my($x) = $_[0];
-
-  return $D{$x} if defined $D{$x};  # most common/irreg cases
-  
-  if( $x =~ m/^(.)(.)$/ ) {
-    return  $D{$1 . '0'} . ' ' . $D{$2};
-     # like    forty        -     two
-      # note that neither bit can be zero at this point
-     
-  } elsif( $x =~ m/^(.)(..)$/ ) {
-    my $tmp = $1 == 1 ? '' : $D{$1}.' ';
-    my($h, $rest) = ($tmp.'yüz', $2);
-    return $h if $rest eq '00';
-    return "$h " . _int2tr(0 + $rest);
-  } else {
-    return _bigint2tr($x);
-  }
+    if( $x =~ m/\A(.)(.)\z/xms ) {
+        return  $D{$1 . '0'} . SPACE . $D{$2};
+        # like    forty        -     two
+        # note that neither bit can be zero at this point     
+    }
+    elsif ( $x =~ m/\A(.)(..)\z/xms ) {
+        my $tmp = $1 == 1 ? EMPTY_STRING : $D{$1} . SPACE;
+        my($h, $rest) = ($tmp.'yüz', $2);
+        return $h if $rest eq '00';
+        return "$h " . _int2tr(0 + $rest);
+    }
+    else {
+        return _bigint2tr($x);
+    }
 }
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 sub _bigint2tr {
-  return undef unless defined $_[0] and length $_[0]
-   and $_[0] =~ m/^\d+$/s;
-
-  my($x) = $_[0];
-
-  my @chunks;  # each:  [ string, exponent ]
-  
-  {
-    my $groupnum = 0;
-    my $num;
-    while( $x =~ s<(\d{1,3})$><>s ) { # pull at most three digits from the end
-      $num = $1 + 0;
-      unshift @chunks, [ $num, $groupnum ] if $num;
-      ++$groupnum;
+    my $x = shift;
+    return unless defined $x and length $x and $x =~ m/\A\d+\z/xms;
+    my @chunks;  # each:  [ string, exponent ]
+    {
+        my $groupnum = 0;
+        my $num;
+        while ( $x =~ s/(\d{1,3})\z//xms ) { # pull at most three digits from the end
+            $num = $1 + 0;
+            unshift @chunks, [ $num, $groupnum ] if $num;
+            ++$groupnum;
+        }
+        return $D{'0'} unless @chunks;  # rare but possible
     }
-    return $D{'0'} unless @chunks;  # rare but possible
-  }
-  
-  my $and;
-  # junk
-  $and = '' if  $chunks[-1][1] == 0  and  $chunks[-1][0] < 100;
-   # The special 'and' that shows up in like "one thousand and eight"
-   # and "two billion and fifteen", but not "one thousand [*and] five hundred"
-   # or "one million, [*and] nine"
 
-  _chunks2tr( \@chunks );
+    my $and;
+    # junk
+    $and = EMPTY_STRING if $chunks[LAST_ELEMENT][1] == 0 and $chunks[LAST_ELEMENT][0] < CHUNK_MAX;
+    # The special 'and' that shows up in like "one thousand and eight"
+    # and "two billion and fifteen", but not "one thousand [*and] five hundred"
+    # or "one million, [*and] nine"
 
-  $chunks[-2] .= " " if $and and @chunks > 1;
-  return "$chunks[0] $chunks[1]" if @chunks == 2;
-   # Avoid having a comma if just two units
-  return join ", ", @chunks;
+    _chunks2tr( \@chunks );
+
+    $chunks[PREV_ELEMENT] .= SPACE if $and and @chunks > 1;
+    return "$chunks[0] $chunks[1]" if @chunks == 2;
+    # Avoid having a comma if just two units
+    return join q{, }, @chunks;
 }
 
-
 sub _chunks2tr {
-  my $chunks = $_[0];
-  return unless @$chunks;
-  my @out;
-  foreach my $c (@$chunks) {
-    push @out,   $c = _groupify( _int2tr( $c->[0] ),  $c->[1] ,$c->[0])  if $c->[0];
-  }
-  @$chunks = @out;
-  return;
+    my $chunks = shift;
+    return if ! @{ $chunks };
+    my @out;
+    foreach my $c ( @{ $chunks } ) {
+        push @out,   $c = _groupify( _int2tr( $c->[0] ),  $c->[1] ,$c->[0])  if $c->[0];
+    }
+    @{ $chunks } = @out;
+    return;
 }
 
 sub _groupify {
-  # turn ("seventeen", 3) => "seventeen billion"
-  my($basic, $multnum, $raw) = @_;
-  return  $basic unless $multnum;  # the first group is unitless
-  DEBUG > 2 and print "  Groupifying $basic x $multnum mults\n";
-  return "$basic $Mult{$multnum}"  if  $Mult{$multnum};
-   # Otherwise it must be huuuuuge, so fake it with scientific notation
-  return "$basic " . "çarpı on üzeri " . num2tr($raw * 3);
+    # turn ("seventeen", 3) => "seventeen billion"
+    my($basic, $multnum, $raw) = @_;
+    return  $basic unless $multnum;  # the first group is unitless
+    _log "  Groupifying $basic x $multnum mults\n" if DEBUG > 2;
+    return "$basic $MULT{$multnum}"  if  $MULT{$multnum};
+    # Otherwise it must be huuuuuge, so fake it with scientific notation
+    return $basic . ' çarpı on üzeri ' . num2tr( $raw * 3 );
 }
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#
 # Because I can never remember this:
 #
 #  3.1E8
@@ -230,30 +245,23 @@ sub _groupify {
 #         (the implicit "10" is the "base" a/k/a "radix")
 
 sub _e2tr {
-  my $x = $_[0];
+    my $x = shift;
+    if ( $x =~ RE_E2TR ) {
+        my($m, $e) = ($1, $2);
+        _log "  Scientific notation: [$x] => $m E $e\n" if DEBUG;
+        $e += 0;
+        return num2tr($m) . ' çarpı on üzeri ' . num2tr($e);
+    }
+    else {
+        _log "  Okay, $x isn't in exponential notation\n" if DEBUG;
+        return;
+    }
+}
 
-  my($m, $e);
-  if( $x =~
-    m<
-      ^(
-        [-+]?  # leading sign
-        (?:
-          [\d,]+  |  [\d,]*\.\d+  # number
-        )
-       )
-      [eE]
-      (-?\d+)   # mantissa, has to be an integer
-      $
-    >x
-  ) {
-    ($m, $e) = ($1, $2);
-    DEBUG and print "  Scientific notation: [$x] => $m E $e\n";
-    $e += 0;
-    return num2tr($m) . ' çarpı on üzeri ' . num2tr($e);
-  } else {
-    DEBUG and print "  Okay, $x isn't in exponential notation\n";
-    return undef;
-  }
+sub _log {
+    my @args = @_;
+    print @args or croak "Unable to print to STDOUT: $!";
+    return;
 }
 
 #==========================================================================
@@ -297,8 +305,8 @@ prints:
 
 =head1 DESCRIPTION
 
-This document describes version C<0.23> of C<Lingua::TR::Numbers>
-released on C<23 April 2009>.
+This document describes version C<0.31> of C<Lingua::TR::Numbers>
+released on C<9 September 2012>.
 
 Lingua::TR::Numbers turns numbers into Turkish text. It exports
 (upon request) two functions, C<num2tr> and C<num2tr_ordinal>. 
@@ -356,23 +364,24 @@ values whenever possible.
 
 Currently, the module won't work with any Perl older than 5.6.
 
-=head1 AUTHOR
-
-Burak Gürsoy, E<lt>burakE<64>cpan.orgE<gt>
-
-=head1 COPYRIGHT
-
-Copyright 2006-2009 Burak Gürsoy. All rights reserved.
+=head1 ACKNOWLEDGEMENT
 
 This module is based on and includes modified code 
-portions of Sean M. Burke's Lingua::EN::Numbers.
+portions from Sean M. Burke's Lingua::EN::Numbers.
 
 Lingua::EN::Numbers is Copyright (c) 2005, Sean M. Burke.
 
+=head1 AUTHOR
+
+Burak Gursoy <burak@cpan.org>.
+
+=head1 COPYRIGHT
+
+Copyright 2006 - 2012 Burak Gursoy. All rights reserved.
+
 =head1 LICENSE
 
-This library is free software; you can redistribute it and/or modify 
-it under the same terms as Perl itself, either Perl version 5.8.8 or, 
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.12.3 or,
 at your option, any later version of Perl 5 you may have available.
-
 =cut
